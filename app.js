@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-'use strict';
+//'use strict';
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -20,7 +20,7 @@ app.post('/ports', (req, res) => {
 	// generate new id
 	// create node
 	let node = {
-		id: Math.floor(Math.random()*16777215).toString(16),
+		id: Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'),
 		status: "unknown"
 	};
 	data.push(node);
@@ -46,9 +46,9 @@ app.get('/ports/:portId', (req, res) => {
 	let portId = req.params.portId;
 	console.log('[ GET ] /ports/' + portId);
 	let port = data.filter((item) => {
-		return (item.name == portId);
+		return (item.id == portId);
 	})[0];
-	res.status(200).send(portId);
+	res.status(200).send(port);
 });
 
 app.delete('/ports/:portId', (req, res) => {

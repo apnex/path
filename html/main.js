@@ -7,11 +7,8 @@ var two = new Two({
 });
 two.appendTo(el);
 
-// anchor
-var center = {
-	x: two.width / 2,
-	y: two.height / 2
-};
+// global variables - fix somewhere else
+var pIndex = {};
 
 // groups
 var gSystem = two.makeGroup();
@@ -21,12 +18,11 @@ var gLinks = two.makeGroup();
 // Z-axis
 gSystem.add(gPorts);
 gSystem.add(gLinks);
-gSystem.translation.set(center.x, center.y);
 
 // calc position on orbit
 function getPosition(current, increment) {
 	return {
-		x: 100,
+		x: 0,
 		y: current + increment
 	};
 }
@@ -43,12 +39,6 @@ async function getPorts() {
 	return await ky.get('/ports').json();
 }
 
-// global variables - fix somewhere else
-var distance = 40;
-var padding = 10;
-var currentDist = 0;
-var pIndex = {};
-
 function buildPorts(apiCache) { // object construction
 	// iterate cache
 	Object.values(apiCache).forEach((item) => {
@@ -61,8 +51,7 @@ function buildPorts(apiCache) { // object construction
 				'height': 40,
 				'radius': 5
 			};
-			let pos = getPosition(currentDist, distance + padding);
-			let port = two.makeRoundedRectangle(pos.x, pos.y, node.width, node.height, node.radius);
+			let port = two.makeRoundedRectangle(0, 0, node.width, node.height, node.radius);
 			port.linewidth = 4;
 			port.stroke = "#aaaaff";
 			port.fill = "#" + item.id;
@@ -105,20 +94,32 @@ function renderLoop(frameCount) {
 	console.log('Called renderLoop, drawing ports.. ');
 
 	let currentDist = 0;
-	let distance = 40;
+	let distance = 0;
 	let padding = 0;
-	Object.values(pIndex).forEach((node) => {
+	Object.values(pIndex).forEach((item) => {
+		// update node position
 		let pos = getPosition(currentDist, distance + padding);
-		//port.linewidth = 4;
-		//port.stroke = "#aaaaff";
-		//port.fill = "#" + item.id;
-		node.object.translation.x = pos.x;
-		node.object.translation.y = pos.y;
+		let node = item.object;
+		node.translation.x = pos.x;
+		node.translation.y = pos.y;
 
-		// test
+		// update node style
+		//node.linewidth += 1;
+		//node = "#aaaaff";
+		//node.fill = "#" + item.id;
+
+		// update counters
 		currentDist = pos.y;
+		distance = 40;
 		padding = 10;
 	});
+
+	// update group translation
+	let shiftGroup = {
+		x: 0,
+		y: -(currentDist / 2)
+	};
+	gPorts.translation.set(0, shiftGroup.y);
 }
 
 var drawOnce = 1;
@@ -145,22 +146,18 @@ two.bind("update", async(frameCount, timeDelta) => {
 		renderCounter = 0
 		await renderLoop();
 	}
-
-	//renderLoop(frameCount); // called every frame @ 60 fps
-
-	// get /bodies
-	// create a frame counter = to track increments of 60 frames (i.e 1 second)
-	// call mainLoop();
-	// forEach body { // hard sync to API
-	//	body.object.translation.x = bodyPos.x;
-	//	body.object.translation.y = bodyPos.y;
-	// }
-	// separate renderLoop(1/frame) from apiLoop(1/180 frames)
-
 });
 two.bind('resize', () => {
-	gSystem.translation.x = two.width / 2;
-	gSystem.translation.y = two.height / 2;
+	center.x = two.width / 2;
+	center.y = two.height / 2;
+	gSystem.translation.x = center.x;
+	gSystem.translation.y = center.y;
 })
 
+// center
+var center = {
+	x: two.width / 2,
+	y: two.height / 2
+};
+gSystem.translation.set(center.x, center.y);
 two.play();

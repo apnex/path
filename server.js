@@ -4,8 +4,8 @@ const app = require('./app');
 
 // get environment variable
 var port = 4040;
-if(process.env.PROBE_SERVER_PORT) {
-	port = process.env.PROBE_SERVER_PORT;
+if(process.env.EXPRESS_SERVER_PORT) {
+	port = process.env.EXPRESS_SERVER_PORT;
 }
 
 // start server

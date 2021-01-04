@@ -6,10 +6,10 @@ source ${WORKDIR}/mod.driver
 
 # inputs
 APIHOST="http://localhost"
-if [[ -n "${PROBE_SERVER_PORT}" ]]; then
-	APIHOST+=":${PROBE_SERVER_PORT}"
+if [[ -n "${EXPRESS_SERVER_PORT}" ]]; then
+	APIHOST+=":${EXPRESS_SERVER_PORT}"
 fi
-ITEM="planets"
+ITEM="ports"
 INPUTS=()
 
 # apiDelete
@@ -25,11 +25,11 @@ run() {
 	URL="${APIHOST}"
 	if [[ -n "${1}" ]]; then
 		URL+="/${ITEM}/${1}"
-		printf "[$(cgreen "INFO")]: api [$(cgreen "list")] ${ITEM} [$(cgreen "${URL}")]... " 1>&2
+		printf "[$(cgreen "INFO")]: api [$(cgreen "delete")] ${ITEM} [$(cgreen "${URL}")]... " 1>&2
 		echo "[$(ccyan "DONE")]" 1>&2
 		apiDelete "${URL}"
 	else
-		echo "[$(corange "ERROR")]: command usage: [$(ccyan " planet.delete <planet.name> ")] " 1>&2
+		echo "[$(corange "ERROR")]: command usage: [$(ccyan " ports.delete <port.id> ")] " 1>&2
 	fi
 }
 

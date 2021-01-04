@@ -6,36 +6,31 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const os = require("os");
 
-var data = [];
+// initialise express
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+var data = [];
 
-// create a body
-app.post('/planets', (req, res) => {
-	console.log('[ POST ] /planets');
+// create a port
+app.post('/ports', (req, res) => {
+	console.log('[ POST ] /ports');
 	console.log(JSON.stringify(req.body, null, "\t"));
-	let name = req.body.name;
-	let check = data.filter((item) => {
-		return (item.name == name);
-	});
-	let node = {};
-	if(!check.length) {
-		node = {
-			name: req.body.name,
-			radius: req.body.radius,
-			orbit: req.body.orbit,
-			status: "unknown"
-		};
-		data.push(node);
-	} else {
-		console.log('[ ' + name + ' ] already exists');
+
+	// generate new id
+	// create node
+	let node = {
+		id: Math.floor(Math.random()*16777215).toString(16),
+		status: "unknown"
 	};
+	data.push(node);
+	console.log('[ ' + node.id + ' ] created');
+
 	res.status(200).send(node);
 });
 
-app.get('/planets', (req, res) => {
-	console.log('[ GET ] /planets');
+app.get('/ports', (req, res) => {
+	console.log('[ GET ] /ports');
 	var hostname = os.hostname();
 	let items = {
 		server: {
@@ -47,23 +42,25 @@ app.get('/planets', (req, res) => {
 	res.status(200).send(items);
 });
 
-app.get('/planets/:planetName', (req, res) => {
-	let planetName = req.params.planetName;
-	console.log('[ GET ] /planets/' + planetName);
-	let planet = data.filter((item) => {
-		return (item.name == planetName);
+app.get('/ports/:portId', (req, res) => {
+	let portId = req.params.portId;
+	console.log('[ GET ] /ports/' + portId);
+	let port = data.filter((item) => {
+		return (item.name == portId);
 	})[0];
-	res.status(200).send(planet);
+	res.status(200).send(portId);
 });
 
-app.delete('/planets/:planetName', (req, res) => {
-	let planetName = req.params.planetName;
-	console.log('[ DELETE ] /planets/' + planetName);
+app.delete('/ports/:portId', (req, res) => {
+	let portId = req.params.portId;
+	console.log('[ DELETE ] /ports/' + portId);
+
 	data = data.filter((item) => {
-		return (item.name != planetName);
+		return (item.id != portId);
 	}); // remove
+	console.log(JSON.stringify(data, null, "\t"));
 	res.status(200).send({
-		message: "planet [ " + planetName + " ] deleted"
+		message: "port [ " + portId + " ] deleted"
 	});
 });
 
@@ -73,5 +70,4 @@ app.get('/favicon.ico', (req, res) => {
 
 // Serve static html files
 app.use('/', express.static(path.join(__dirname, 'html')))
-
 module.exports = app;

@@ -6,13 +6,12 @@ source ${WORKDIR}/mod.driver
 
 # inputs
 APIHOST="http://localhost"
-if [[ -n "${PROBE_SERVER_PORT}" ]]; then
-	APIHOST+=":${PROBE_SERVER_PORT}"
+if [[ -n "${EXPRESS_SERVER_PORT}" ]]; then
+	APIHOST+=":${EXPRESS_SERVER_PORT}"
 fi
 echo "APIHOST [${APIHOST}]" 1>&2
-ITEM="planets"
+ITEM="ports"
 INPUTS=()
-
 
 # makeBody
 makeBody() {
@@ -50,7 +49,7 @@ run() {
 		echo "${BODY}"
 		apiPost "${URL}" "${BODY}"
 	else
-		echo "[$(corange "ERROR")]: command usage: [$(ccyan " planets.create <planet.name> <planet.radius> <planet.orbit> ")] " 1>&2
+		echo "[$(corange "ERROR")]: command usage: [$(ccyan " ports.create <port.name> <port.radius> <port.orbit> ")] " 1>&2
 	fi
 }
 

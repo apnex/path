@@ -6,10 +6,10 @@ source ${WORKDIR}/mod.driver
 
 # inputs
 APIHOST="http://localhost"
-if [[ -n "${PROBE_SERVER_PORT}" ]]; then
-	APIHOST+=":${PROBE_SERVER_PORT}"
+if [[ -n "${EXPRESS_SERVER_PORT}" ]]; then
+	APIHOST+=":${EXPRESS_SERVER_PORT}"
 fi
-ITEM="planets"
+ITEM="ports"
 INPUTS=()
 
 # apiGet

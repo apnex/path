@@ -4,7 +4,7 @@ if [[ $(realpath $0) =~ ^(.*)/([^/]+)$ ]]; then
 fi
 source ${WORKDIR}/mod.core
 source ${WORKDIR}/mod.vals
-PROBE_SERVER_PORT=4040
+EXPRESS_SERVER_PORT=4040
 
 driver() {
 	case "${1}" in # switch

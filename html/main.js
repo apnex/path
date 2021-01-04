@@ -15,44 +15,20 @@ var center = {
 
 // groups
 var gSystem = two.makeGroup();
-var gOrbits = two.makeGroup();
-var gPlanets = two.makeGroup();
-var gSun = two.makeGroup();
+var gPorts = two.makeGroup();
 var gLinks = two.makeGroup();
 
 // Z-axis
-gSystem.add(gOrbits);
-gSystem.add(gPlanets);
-gSystem.add(gSun);
+gSystem.add(gPorts);
 gSystem.add(gLinks);
-
-// things
-gOrbits.visible = true;
 gSystem.translation.set(center.x, center.y);
 
-// return angle increment
-function getAngle(seconds, frameCount) {
-	let frameTotal = 60 * seconds;
-	let frameCurrent = frameCount % frameTotal;
-	return (360 / frameTotal) * frameCurrent * -1; // -1 to reverse direction
-}
-
 // calc position on orbit
-function getPosition(angle, orbit) {
+function getPosition(current, increment) {
 	return {
-		x: Math.cos(angle * Math.PI / 180) * orbit,
-		y: Math.sin(angle * Math.PI / 180) * orbit
+		x: 100,
+		y: current + increment
 	};
-}
-
-// scale down body radius as a square root against smallest body
-function getRadius(radius, baseRadius, scale = 6) {
-	return Math.sqrt(radius / baseRadius) * scale;
-}
-
-// scale down body orbit period as a square root against fastest body
-function getOrbit(orbit, baseOrbit, scale = 60) {
-	return Math.sqrt(orbit / baseOrbit) * scale;
 }
 
 // Returns a Promise that resolves after "ms" Milliseconds
@@ -62,166 +38,115 @@ function msleep(ms) {
 	});
 }
 
-// Get planets from API server
-async function getPlanets() {
-	return await ky.get('/planets').json();
+// Get items from API server
+async function getPorts() {
+	return await ky.get('/ports').json();
 }
 
 // global variables - fix somewhere else
-var baseRadius = 0;
-var baseOrbit = 0;
-var pStats = [];
+var distance = 40;
+var padding = 10;
+var currentDist = 0;
 var pIndex = {};
 
-function buildPlanets(planets) { // planetConstruction
-	console.log('Building planets..');
+function buildPorts(apiCache) { // object construction
+	// iterate cache
+	Object.values(apiCache).forEach((item) => {
+		// check and construct construct node
+		if(pIndex[item.id] === undefined) {
+			console.log('Creating [' + item.id + ']');
+			let node = {
+				'id': item.id,
+				'width': 40,
+				'height': 40,
+				'radius': 5
+			};
+			let pos = getPosition(currentDist, distance + padding);
+			let port = two.makeRoundedRectangle(pos.x, pos.y, node.width, node.height, node.radius);
+			port.linewidth = 4;
+			port.stroke = "#aaaaff";
+			port.fill = "#" + item.id;
+			node['object'] = port;
 
-	// find smallest body radius
-	let radiusArr = planets.map((body) => body.radius);
-	baseRadius = Math.min(...radiusArr);
-
-	// find fastest body orbit
-	let orbitArr = planets.map((body) => body.orbit);
-	baseOrbit = Math.min(...orbitArr);
-
-	// sun radius;
-	let item = {
-		"name": "sun",
-		"radius": 695508,
-		"distance": 0,
-		"orbit": 0
-	};
-	let sunRadius = getRadius(item.radius, baseRadius);
-
-	// init geometry
-	pStats = [];
-	pIndex = {};
-	let orbitDist = sunRadius;
-	let orbitPadding = 14;
-
-	console.log(gPlanets);
-	console.log(planets);
-
-	planets.forEach((item) => {
-		// orbit radius
-		let bodyRadius = getRadius(item.radius, baseRadius);
-		orbitDist += orbitPadding;
-		orbitDist += bodyRadius;
-
-		// construct orbit
-		let bodyOrbit = two.makeCircle(0, 0, orbitDist);
-		bodyOrbit.noFill();
-		bodyOrbit.linewidth = 1;
-		bodyOrbit.stroke = "#aaaaaa";
-		gOrbits.add(bodyOrbit);
-
-		// construct body
-		let body = {
-			'name': item.name,
-			'radius': bodyRadius,
-			'distance': orbitDist,
-			'orbit': item.orbit
-		};
-		let pos = getPosition(0, body.distance);
-		let planet = two.makeCircle(pos.x, pos.y, body.radius);
-		body['object'] = planet;
-		pStats.push(body);
-		pIndex[body.name] = body;
-		gPlanets.add(planet);
-		orbitDist += bodyRadius;
-	});
-}
-
-async function apiLoop() { // main loop iteration - called from play()
-	console.log('Called apiLoop, getting planets.. ');
-
-	// build planets
-	return getPlanets().then((data) => {
-		// clear orbits
-		gOrbits.children.forEach((child) => {
-			child.remove();
-		});
-
-		console.log('Planets - pre-delete...');
-		//console.log(gPlanets.children);
-
-		// clear planets
-		/*gPlanets.children.forEach((child) => {
-			console.log('gPlanet: ' + child.id);
-			child.remove();
-		});*/
-		console.log(pStats);
-		pStats.forEach((body) => {
-			console.log('Planet: ' + body.name);
-			body.object.remove();
-		});
-		two.update();
-		console.log('Planets - post-delete...');
-		console.log(gPlanets.children);
-
-		//console.log(gPlanets.children);
-
-		// rebuild planets
-		console.log('build2..');
-		buildPlanets(data.items);
-		return;
-	});
-}
-
-function renderLoop(frameCount) { // main loop iteration - called from play()
-	//console.log('Called renderLoop, drawing planets... ');
-	// update bodies
-
-	pStats.forEach((body) => {
-		let orbitDuration = getOrbit(body.orbit, baseOrbit);
-		let bodyPos = getPosition(getAngle(orbitDuration, frameCount), body.distance);
-		body.object.translation.x = bodyPos.x;
-		body.object.translation.y = bodyPos.y;
-	});
-
-	// progress drawing events
-	drawingEvents.forEach((link) => {
-		// get new pos x,y
-		let srcPos = pIndex[link.src].object.translation;
-		let dstPos = pIndex[link.dst].object.translation;
-
-		// check if link exists
-		let pLink = pLinks[link.src + '-' + link.dst];
-		if(pLink != undefined) { // link exists
-			// update pos x,y
-			let points = pLink.vertices;
-			points[0].x = srcPos.x;
-			points[0].y = srcPos.y;
-			points[1].x = dstPos.x;
-			points[1].y = dstPos.y;
-		} else { // create new link
-			let line = two.makeLine(srcPos.x, srcPos.y, dstPos.x, dstPos.y);
-			line.linewidth = 10;
-			line.stroke = "#03a9f4";
-			line.opacity = 0.5;
-			pLinks[link.src + '-' + link.dst] = line;
-			gLinks.add(line);
+			// register node
+			pIndex[node.id] = node;
+			gPorts.add(port);
 		}
 	});
 }
 
-var drawingEvents = [];
-var pLinks = {};
+function clearNodes(apiCache) {
+	// delete ports
+	Object.values(pIndex).forEach((node) => {
+		if(apiCache[node.id] === undefined) {
+			console.log('Deleting [' + node.id + ']');
+			delete pIndex[node.id];
+			gPorts.remove(node.object);
+		}
+	});
+}
+
+async function apiLoop() { // main loop iteration - called from play()
+	console.log('Called apiLoop, getting ports.. ');
+
+	// build ports
+	return getPorts().then((data) => {
+		let apiCache = {};
+		data.items.forEach((item) => {
+			apiCache[item.id] = item;
+		});
+		clearNodes(apiCache); // delete stale nodes
+		buildPorts(apiCache); // create missing nodes
+		return 'apiLoop complete';
+	});
+}
+
+function renderLoop(frameCount) {
+	console.log('Called renderLoop, drawing ports.. ');
+
+	let currentDist = 0;
+	let distance = 40;
+	let padding = 0;
+	Object.values(pIndex).forEach((node) => {
+		let pos = getPosition(currentDist, distance + padding);
+		//port.linewidth = 4;
+		//port.stroke = "#aaaaff";
+		//port.fill = "#" + item.id;
+		node.object.translation.x = pos.x;
+		node.object.translation.y = pos.y;
+
+		// test
+		currentDist = pos.y;
+		padding = 10;
+	});
+}
+
 var drawOnce = 1;
 var apiCounter = 0
-var apiInterval = 5000
-/*
+var apiInterval = 1000
+var renderCounter = 0;
+var renderInterval = 1000
 two.bind("update", async(frameCount, timeDelta) => {
 
+	// apiInterval
 	if(typeof(timeDelta) != 'undefined') {
 		apiCounter += timeDelta;
 	}
-	if(apiCounter > apiInterval) {
+	if(apiCounter > apiInterval) { // called every 2 seconds
 		apiCounter = 0
 		await apiLoop();
 	}
 
-	renderLoop(frameCount); // called every frame @ 60 fps
+	// renderInterval
+	if(typeof(timeDelta) != 'undefined') {
+		renderCounter += timeDelta;
+	}
+	if(renderCounter > renderInterval) { // called every 2 seconds
+		renderCounter = 0
+		await renderLoop();
+	}
+
+	//renderLoop(frameCount); // called every frame @ 60 fps
 
 	// get /bodies
 	// create a frame counter = to track increments of 60 frames (i.e 1 second)
@@ -233,45 +158,9 @@ two.bind("update", async(frameCount, timeDelta) => {
 	// separate renderLoop(1/frame) from apiLoop(1/180 frames)
 
 });
-*/
 two.bind('resize', () => {
 	gSystem.translation.x = two.width / 2;
 	gSystem.translation.y = two.height / 2;
 })
 
-// create and register event
-function clickTest(name) {
-	drawingEvents.push({
-		src: 'earth',
-		dst: name
-	});
-};
-
-// construct system and render
-async function newTest() {
-	// make sun
-	let item = {
-		"name": "sun",
-		"radius": 695508,
-		"distance": 0,
-		"orbit": 0
-	};
-	let baseRadius = 2000;
-	let sunRadius = getRadius(item.radius, baseRadius);
-	let sun = two.makeCircle(0, 0, sunRadius);
-	gSun.add(sun);
-
-	console.log('step 1..');
-	await apiLoop();
-	console.log('step 2..');
-	await msleep(2000);
-	console.log('step 3..');
-	await apiLoop();
-	console.log('update..');
-	two.update();
-}
-
-newTest().then((end) => {
-	console.log('The end..');
-});
-//two.play();
+two.play();

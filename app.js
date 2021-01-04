@@ -12,6 +12,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 var data = [];
 
+// implement a grid
+let grid = [
+	[0, 0, 0],
+	[0, 0, 0],
+	[0, 0, 0]
+];
+
 // create a port
 app.post('/ports', (req, res) => {
 	console.log('[ POST ] /ports');
@@ -21,8 +28,10 @@ app.post('/ports', (req, res) => {
 	// create node
 	let node = {
 		id: Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'),
+		grid: req.body.grid,
 		status: "unknown"
 	};
+	console.log(JSON.stringify(node, null, "\t"));
 	data.push(node);
 	console.log('[ ' + node.id + ' ] created');
 

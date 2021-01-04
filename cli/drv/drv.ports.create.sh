@@ -15,14 +15,14 @@ INPUTS=()
 
 # makeBody
 makeBody() {
-	local NAME="${1}"
-	local RADIUS="${2}"
-	local ORBIT="${3}"
+	local GRIDX="${1}"
+	local GRIDY="${2}"
 	read -r -d "" BODY <<-EOF
 	{
-		"name": "${NAME}",
-		"radius": "${RADIUS}",
-		"orbit": "${ORBIT}"
+		"grid": {
+			"x": "${GRIDX}",
+			"y": "${GRIDY}"
+		}
 	}
 	EOF
 	printf "${BODY}"

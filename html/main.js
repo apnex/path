@@ -19,11 +19,21 @@ var gLinks = two.makeGroup();
 gSystem.add(gPorts);
 gSystem.add(gLinks);
 
-// calc position on orbit
+// calc raw position
 function getPosition(current, increment) {
 	return {
 		x: 0,
 		y: current + increment
+	};
+}
+
+// calc grid position
+function getGridPosition(x, y) {
+	let padding = 10;
+	let size = 40;
+	return {
+		x: (x * size),
+		y: (y * size)
 	};
 }
 
@@ -49,7 +59,11 @@ function buildPorts(apiCache) { // object construction
 				'id': item.id,
 				'width': 40,
 				'height': 40,
-				'radius': 5
+				'radius': 5,
+				'grid': {
+					x: item.grid.x,
+					y: item.grid.y
+				}
 			};
 			let port = two.makeRoundedRectangle(0, 0, node.width, node.height, node.radius);
 			port.linewidth = 4;
@@ -93,12 +107,16 @@ async function apiLoop() { // main loop iteration - called from play()
 function renderLoop(frameCount) {
 	console.log('Called renderLoop, drawing ports.. ');
 
-	let currentDist = 0;
-	let distance = 0;
-	let padding = 0;
+	let distance = 40;
+	let padding = 10;
+	let gridSize = {
+		x: 0,
+		y: 0
+	};
 	Object.values(pIndex).forEach((item) => {
 		// update node position
-		let pos = getPosition(currentDist, distance + padding);
+		//let pos = getPosition(currentDist, distance + padding);
+		let pos = getGridPosition(item.grid.x, item.grid.y);
 		let node = item.object;
 		node.translation.x = pos.x;
 		node.translation.y = pos.y;
@@ -109,17 +127,25 @@ function renderLoop(frameCount) {
 		//node.fill = "#" + item.id;
 
 		// update counters
-		currentDist = pos.y;
-		distance = 40;
-		padding = 10;
+		//currentDist = pos.y;
+		//distance = 40;
+		//padding = 10;
+		if(gridSize.x < item.grid.x) {
+			gridSize.x = item.grid.x;
+		}
+		if(gridSize.y < item.grid.y) {
+			gridSize.y = item.grid.y;
+		}
 	});
 
 	// update group translation
+	console.log(JSON.stringify(gridSize, null, "\t"));
 	let shiftGroup = {
-		x: 0,
-		y: -(currentDist / 2)
+		x: -(gridSize.x * distance / 2),
+		y: -(gridSize.y * distance / 2)
 	};
-	gPorts.translation.set(0, shiftGroup.y);
+	console.log(JSON.stringify(shiftGroup, null, "\t"));
+	gPorts.translation.set(shiftGroup.x, shiftGroup.y);
 }
 
 var drawOnce = 1;

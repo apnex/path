@@ -113,15 +113,12 @@ async function apiLoop() { // main loop iteration - called from play()
 function renderLoop(frameCount) {
 	console.log('Called renderLoop, drawing nodes.. ');
 
-	let distance = 40;
-	let padding = 10;
 	let gridSize = {
 		x: 0,
 		y: 0
 	};
 	Object.values(pIndex).forEach((item) => {
 		// update node position
-		//let pos = getPosition(currentDist, distance + padding);
 		let pos = getGridPosition(item.grid.x, item.grid.y);
 		let node = item.object;
 		node.translation.x = pos.x;
@@ -135,12 +132,8 @@ function renderLoop(frameCount) {
 			node.linewidth = 2;
 			node.stroke = "#ddddff";
 		}
-		//node.fill = "#" + item.id;
 
 		// update counters
-		//currentDist = pos.y;
-		//distance = 40;
-		//padding = 10;
 		if(gridSize.x < item.grid.x) {
 			gridSize.x = item.grid.x;
 		}
@@ -149,10 +142,11 @@ function renderLoop(frameCount) {
 		}
 	});
 
-	// update group translation
+	// update group center translation
+	let gridPos = getGridPosition(gridSize.x, gridSize.y);
 	let shiftGroup = {
-		x: -(gridSize.x * distance / 2),
-		y: -(gridSize.y * distance / 2)
+		x: -(gridPos.x / 2),
+		y: -(gridPos.y / 2),
 	};
 	gNodes.translation.set(shiftGroup.x, shiftGroup.y);
 }

@@ -40,6 +40,18 @@ app.post('/nodes', (req, res) => {
 	res.status(200).send(node);
 });
 
+// clear nodes
+app.post('/nodes/clear', (req, res) => {
+	console.log('[ POST ] /nodes/clear');
+	data = [];
+	grid = [];
+	selected = [];
+
+	res.status(200).send({
+		message: "All nodes cleared"
+	});
+});
+
 app.get('/nodes', (req, res) => {
 	console.log('[ GET ] /nodes');
 

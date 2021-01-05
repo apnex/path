@@ -33,15 +33,10 @@ apiPost() {
 # run
 run() {
 	URL="${APIHOST}"
-	if [[ -n "${1}" ]]; then
-		URL+="/${ITEM}/${1}/select"
-		printf "[$(cgreen "INFO")]: api [$(cgreen "select")] ${ITEM} [$(cgreen "${URL}")]... " 1>&2
-		echo "[$(ccyan "DONE")]" 1>&2
-		apiPost "${URL}"
-		#apiPost "${URL}" | jq --tab .
-	else
-		echo "[$(corange "ERROR")]: command usage: [$(ccyan " nodes.select <nodes.id> ")] " 1>&2
-	fi
+	URL+="/${ITEM}/clear"
+	printf "[$(cgreen "INFO")]: api [$(cgreen "clear")] ${ITEM} [$(cgreen "${URL}")]... " 1>&2
+	echo "[$(ccyan "DONE")]" 1>&2
+	apiPost "${URL}"
 }
 
 # driver

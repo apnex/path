@@ -9,15 +9,14 @@ APIHOST="http://localhost"
 if [[ -n "${EXPRESS_SERVER_PORT}" ]]; then
 	APIHOST+=":${EXPRESS_SERVER_PORT}"
 fi
-ITEM="ports"
+ITEM="grids/default/cells"
 INPUTS=()
 
-# apiDelete
-apiDelete() {
+# apiGet
+apiGet() {
 	local URL="${1}"
-	local RESPONSE=$(curl -s -X DELETE \
-		-H "Content-Type: application/json" \
-	"${URL}")
+	local RESPONSE=$(curl -s -X GET "${URL}")
+	printf "${RESPONSE}"
 }
 
 # run
@@ -25,11 +24,11 @@ run() {
 	URL="${APIHOST}"
 	if [[ -n "${1}" ]]; then
 		URL+="/${ITEM}/${1}"
-		printf "[$(cgreen "INFO")]: api [$(cgreen "delete")] ${ITEM} [$(cgreen "${URL}")]... " 1>&2
+		printf "[$(cgreen "INFO")]: api [$(cgreen "get")] ${ITEM} [$(cgreen "${URL}")]... " 1>&2
 		echo "[$(ccyan "DONE")]" 1>&2
-		apiDelete "${URL}"
+		apiGet "${URL}" | jq --tab .
 	else
-		echo "[$(corange "ERROR")]: command usage: [$(ccyan " ports.delete <port.id> ")] " 1>&2
+		echo "[$(corange "ERROR")]: command usage: [$(ccyan " grids.cells.get <cell.id> ")] " 1>&2
 	fi
 }
 

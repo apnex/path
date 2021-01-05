@@ -5,9 +5,9 @@ fi
 if [ -z ${STATEDIR} ]; then
 	STATEDIR="${WORKDIR}/state"
 fi
-if [ ! -d ${STATEDIR} ]; then
-	mkdir ${STATEDIR}
-fi
+#if [ ! -d ${STATEDIR} ]; then
+#	mkdir ${STATEDIR}
+#fi # ignore state dir for now
 
 # COLOURS
 #RED=$'\e[31;1m'

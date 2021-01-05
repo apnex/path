@@ -10,25 +10,28 @@ if [[ -n "${EXPRESS_SERVER_PORT}" ]]; then
 	APIHOST+=":${EXPRESS_SERVER_PORT}"
 fi
 echo "APIHOST [${APIHOST}]" 1>&2
-ITEM="ports"
+ITEM="nodes"
 INPUTS=()
 
-# makeBody
+# makeBody - validate input
 makeBody() {
-	local GRIDX="${1}"
-	local GRIDY="${2}"
-	read -r -d "" BODY <<-EOF
-	{
-		"grid": {
-			"x": "${GRIDX}",
-			"y": "${GRIDY}"
+	local INPUT="${1}"
+	if [[ ${INPUT} =~ ^([0-9]+)[:]([0-9]+)$ ]]; then
+		local GRIDX="${BASH_REMATCH[1]}"
+		local GRIDY="${BASH_REMATCH[2]}"
+		read -r -d "" BODY <<-EOF
+		{
+			"grid": {
+				"x": "${GRIDX}",
+				"y": "${GRIDY}"
+			}
 		}
-	}
-	EOF
-	printf "${BODY}"
+		EOF
+		printf "${BODY}"
+	fi
 }
 
-# apiGet
+# apiPost
 apiPost() {
 	local URL="${1}"
 	local BODY="${2}"
@@ -36,20 +39,20 @@ apiPost() {
 		-H "Content-Type: application/json" \
 		-d "${BODY}" \
 	"${URL}")
+	printf "${RESPONSE}"
 }
 
 # run
 run() {
 	URL="${APIHOST}"
 	URL+="/${ITEM}"
-	if [[ -n "${1}" && -n "${2}" ]]; then
-		local BODY=$(makeBody "${@}")
+	local BODY=$(makeBody "${@}")
+	if [[ -n "${BODY}" ]]; then
 		printf "[$(cgreen "INFO")]: api [$(cgreen "list")] ${ITEM} [$(cgreen "${URL}")]... " 1>&2
 		echo "[$(ccyan "DONE")]" 1>&2
-		echo "${BODY}"
 		apiPost "${URL}" "${BODY}"
 	else
-		echo "[$(corange "ERROR")]: command usage: [$(ccyan " ports.create <port.name> <port.radius> <port.orbit> ")] " 1>&2
+		echo "[$(corange "ERROR")]: command usage: [$(ccyan " nodes.create <node.pos> ")] " 1>&2
 	fi
 }
 

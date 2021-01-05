@@ -1,6 +1,6 @@
 import ky from './ky.min.js';
 
-console.log('moo');
+console.log('main-start');
 var el = document.getElementById("main");
 var two = new Two({
 	fullscreen: true
@@ -12,11 +12,11 @@ var pIndex = {};
 
 // groups
 var gSystem = two.makeGroup();
-var gPorts = two.makeGroup();
+var gNodes = two.makeGroup();
 var gLinks = two.makeGroup();
 
 // Z-axis
-gSystem.add(gPorts);
+gSystem.add(gNodes);
 gSystem.add(gLinks);
 
 // calc raw position
@@ -32,8 +32,8 @@ function getGridPosition(x, y) {
 	let padding = 10;
 	let size = 40;
 	return {
-		x: (x * size),
-		y: (y * size)
+		x: (x * size) + (x * padding),
+		y: (y * size) + (y * padding)
 	};
 }
 
@@ -45,11 +45,11 @@ function msleep(ms) {
 }
 
 // Get items from API server
-async function getPorts() {
-	return await ky.get('/ports').json();
+async function getNodes() {
+	return await ky.get('/nodes').json();
 }
 
-function buildPorts(apiCache) { // object construction
+function buildNodes(apiCache) { // object construction
 	// iterate cache
 	Object.values(apiCache).forEach((item) => {
 		// check and construct construct node
@@ -65,15 +65,15 @@ function buildPorts(apiCache) { // object construction
 					y: item.grid.y
 				}
 			};
-			let port = two.makeRoundedRectangle(0, 0, node.width, node.height, node.radius);
-			port.linewidth = 4;
-			port.stroke = "#aaaaff";
-			port.fill = "#" + item.id;
-			node['object'] = port;
+			let nodeObj = two.makeRoundedRectangle(0, 0, node.width, node.height, node.radius);
+			nodeObj.linewidth = 4;
+			nodeObj.stroke = "#aaaaff";
+			nodeObj.fill = "#" + item.id;
+			node['object'] = nodeObj;
 
-			// register node
+			// register node to scene
 			pIndex[node.id] = node;
-			gPorts.add(port);
+			gNodes.add(nodeObj);
 		}
 	});
 }
@@ -84,28 +84,28 @@ function clearNodes(apiCache) {
 		if(apiCache[node.id] === undefined) {
 			console.log('Deleting [' + node.id + ']');
 			delete pIndex[node.id];
-			gPorts.remove(node.object);
+			gNodes.remove(node.object);
 		}
 	});
 }
 
 async function apiLoop() { // main loop iteration - called from play()
-	console.log('Called apiLoop, getting ports.. ');
+	console.log('Called apiLoop, getting nodes.. ');
 
 	// build ports
-	return getPorts().then((data) => {
+	return getNodes().then((data) => {
 		let apiCache = {};
 		data.items.forEach((item) => {
 			apiCache[item.id] = item;
 		});
 		clearNodes(apiCache); // delete stale nodes
-		buildPorts(apiCache); // create missing nodes
+		buildNodes(apiCache); // create missing nodes
 		return 'apiLoop complete';
 	});
 }
 
 function renderLoop(frameCount) {
-	console.log('Called renderLoop, drawing ports.. ');
+	console.log('Called renderLoop, drawing nodes.. ');
 
 	let distance = 40;
 	let padding = 10;
@@ -139,16 +139,13 @@ function renderLoop(frameCount) {
 	});
 
 	// update group translation
-	console.log(JSON.stringify(gridSize, null, "\t"));
 	let shiftGroup = {
 		x: -(gridSize.x * distance / 2),
 		y: -(gridSize.y * distance / 2)
 	};
-	console.log(JSON.stringify(shiftGroup, null, "\t"));
-	gPorts.translation.set(shiftGroup.x, shiftGroup.y);
+	gNodes.translation.set(shiftGroup.x, shiftGroup.y);
 }
 
-var drawOnce = 1;
 var apiCounter = 0
 var apiInterval = 1000
 var renderCounter = 0;

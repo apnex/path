@@ -12,20 +12,16 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 var data = [];
 
-// implement a grid
-let grid = [
-	[0, 0, 0],
-	[0, 0, 0],
-	[0, 0, 0]
-];
+// implement an external grid module for placement?
+// integrate grid as first-class API objcet
+var grid = {};
 
-// create a port
-app.post('/ports', (req, res) => {
-	console.log('[ POST ] /ports');
+// create a node
+app.post('/nodes', (req, res) => {
+	console.log('[ POST ] /nodes');
 	console.log(JSON.stringify(req.body, null, "\t"));
 
-	// generate new id
-	// create node
+	// generate new node
 	let node = {
 		id: Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'),
 		grid: req.body.grid,
@@ -33,13 +29,21 @@ app.post('/ports', (req, res) => {
 	};
 	console.log(JSON.stringify(node, null, "\t"));
 	data.push(node);
+	let gridKey = node.grid.x + ':' + node.grid.y;
+	console.log('gridKey: ' + gridKey);
+	console.log(grid[gridKey]);
+	if(grid[gridKey] === undefined) {
+		grid[gridKey] = [];
+	}
+	grid[gridKey].push(node.id);
 	console.log('[ ' + node.id + ' ] created');
 
 	res.status(200).send(node);
 });
 
-app.get('/ports', (req, res) => {
-	console.log('[ GET ] /ports');
+app.get('/nodes', (req, res) => {
+	console.log('[ GET ] /nodes');
+
 	var hostname = os.hostname();
 	let items = {
 		server: {
@@ -48,28 +52,45 @@ app.get('/ports', (req, res) => {
 		},
 		items: data
 	};
+
 	res.status(200).send(items);
 });
 
-app.get('/ports/:portId', (req, res) => {
-	let portId = req.params.portId;
-	console.log('[ GET ] /ports/' + portId);
-	let port = data.filter((item) => {
-		return (item.id == portId);
-	})[0];
-	res.status(200).send(port);
+app.get('/grids/default/cells/:cellId', (req, res) => {
+	let cellId = req.params.cellId;
+	console.log('[ GET ] /grids/default/cells/' + cellId);
+
+	let node = grid[cellId];
+	console.log('test: ' + cellId);
+	console.log(JSON.stringify(node, null, "\t"));
+
+	res.status(200).send(node);
 });
 
-app.delete('/ports/:portId', (req, res) => {
-	let portId = req.params.portId;
-	console.log('[ DELETE ] /ports/' + portId);
+app.get('/nodes/:nodeId', (req, res) => {
+	let nodeId = req.params.nodeId;
+	console.log('[ GET ] /nodes/' + nodeId);
+
+	let node = data.filter((item) => {
+		return (item.id == nodeId);
+	})[0];
+
+	res.status(200).send(node);
+});
+
+app.delete('/nodes/:nodeId', (req, res) => {
+	let nodeId = req.params.nodeId;
+	console.log('[ DELETE ] /nodes/' + nodeId);
 
 	data = data.filter((item) => {
-		return (item.id != portId);
+		let gridKey = item.grid.x + ':' + item.grid.y;
+		delete grid[gridKey];
+		return (item.id != nodeId);
 	}); // remove
 	console.log(JSON.stringify(data, null, "\t"));
+
 	res.status(200).send({
-		message: "port [ " + portId + " ] deleted"
+		message: "port [ " + nodeId + " ] deleted"
 	});
 });
 

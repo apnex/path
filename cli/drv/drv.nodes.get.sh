@@ -9,7 +9,7 @@ APIHOST="http://localhost"
 if [[ -n "${EXPRESS_SERVER_PORT}" ]]; then
 	APIHOST+=":${EXPRESS_SERVER_PORT}"
 fi
-ITEM="ports"
+ITEM="nodes"
 INPUTS=()
 
 # apiGet
@@ -22,11 +22,13 @@ apiGet() {
 # run
 run() {
 	URL="${APIHOST}"
-	URL+="/${ITEM}"
-	if [[ -n "${URL}" ]]; then
-		printf "[$(cgreen "INFO")]: api [$(cgreen "list")] ${ITEM} [$(cgreen "${URL}")]... " 1>&2
+	if [[ -n "${1}" ]]; then
+		URL+="/${ITEM}/${1}"
+		printf "[$(cgreen "INFO")]: api [$(cgreen "get")] ${ITEM} [$(cgreen "${URL}")]... " 1>&2
 		echo "[$(ccyan "DONE")]" 1>&2
-		apiGet "${URL}"
+		apiGet "${URL}" | jq --tab .
+	else
+		echo "[$(corange "ERROR")]: command usage: [$(ccyan " nodes.get <nodes.id> ")] " 1>&2
 	fi
 }
 

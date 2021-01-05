@@ -9,14 +9,15 @@ APIHOST="http://localhost"
 if [[ -n "${EXPRESS_SERVER_PORT}" ]]; then
 	APIHOST+=":${EXPRESS_SERVER_PORT}"
 fi
-ITEM="ports"
+ITEM="nodes"
 INPUTS=()
 
-# apiGet
-apiGet() {
+# apiDelete
+apiDelete() {
 	local URL="${1}"
-	local RESPONSE=$(curl -s -X GET "${URL}")
-	printf "${RESPONSE}"
+	local RESPONSE=$(curl -s -X DELETE \
+		-H "Content-Type: application/json" \
+	"${URL}")
 }
 
 # run
@@ -24,11 +25,11 @@ run() {
 	URL="${APIHOST}"
 	if [[ -n "${1}" ]]; then
 		URL+="/${ITEM}/${1}"
-		printf "[$(cgreen "INFO")]: api [$(cgreen "get")] ${ITEM} [$(cgreen "${URL}")]... " 1>&2
+		printf "[$(cgreen "INFO")]: api [$(cgreen "delete")] ${ITEM} [$(cgreen "${URL}")]... " 1>&2
 		echo "[$(ccyan "DONE")]" 1>&2
-		apiGet "${URL}" | jq --tab .
+		apiDelete "${URL}"
 	else
-		echo "[$(corange "ERROR")]: command usage: [$(ccyan " ports.get <port.id> ")] " 1>&2
+		echo "[$(corange "ERROR")]: command usage: [$(ccyan " nodes.delete <nodes.id> ")] " 1>&2
 	fi
 }
 

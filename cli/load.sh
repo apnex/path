@@ -1,18 +1,17 @@
 #!/bin/bash
 
-PLANETS=$(cat planets.json | jq -c '.[]')
+NODES=$(cat nodes.json | jq -c '.[]')
 
-function loadPlanets() {
+function loadNodes() {
 	IFS=$'\n'
 	COUNT=0
-	for PLANET in ${PLANETS}; do
-		local NAME=$(printf ${PLANET} | jq -r '.name')
-		local RADIUS=$(printf ${PLANET} | jq -r '.radius')
-		local ORBIT=$(printf ${PLANET} | jq -r '.orbit')
-		./cmd.planets.create.sh ${NAME} ${RADIUS} ${ORBIT}
-		sleep 1
+	for NODE in ${NODES}; do
+		local GRIDX=$(printf ${NODE} | jq -r '.[0]')
+		local GRIDY=$(printf ${NODE} | jq -r '.[1]')
+		./cmd.nodes.create.sh "${GRIDX}:${GRIDY}"
+		#sleep 1
 		COUNT=$((COUNT+1))
 	done
 }
 
-loadPlanets
+loadNodes

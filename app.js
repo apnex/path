@@ -15,6 +15,7 @@ var data = [];
 // implement an external grid module for placement?
 // integrate grid as first-class API objcet
 var grid = {};
+var selected = [];
 
 // create a node
 app.post('/nodes', (req, res) => {
@@ -30,8 +31,6 @@ app.post('/nodes', (req, res) => {
 	console.log(JSON.stringify(node, null, "\t"));
 	data.push(node);
 	let gridKey = node.grid.x + ':' + node.grid.y;
-	console.log('gridKey: ' + gridKey);
-	console.log(grid[gridKey]);
 	if(grid[gridKey] === undefined) {
 		grid[gridKey] = [];
 	}
@@ -76,6 +75,30 @@ app.get('/nodes/:nodeId', (req, res) => {
 	})[0];
 
 	res.status(200).send(node);
+});
+
+app.post('/nodes/:nodeId/select', (req, res) => {
+	let nodeId = req.params.nodeId;
+	console.log('[ POST ] /nodes/' + nodeId + '/select');
+
+	//console.log(JSON.stringify(req.body, null, "\t"));
+	data.forEach((node) => {
+		if(node.id == nodeId) {
+			if(selected.length > 1) {
+				let oldNodeId = selected.shift();
+				data.filter((item) => {
+					return (item.id == oldNodeId);
+				})[0].status = 'unknown';
+			}
+			node.status = 'selected'; // change so status is inherited from "selected" state
+			selected.push(node.id);
+		}
+	});
+	console.log(selected);
+
+	res.status(200).send({
+		message: "node [ " + nodeId + " ] selected"
+	});
 });
 
 app.delete('/nodes/:nodeId', (req, res) => {

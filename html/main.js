@@ -29,7 +29,7 @@ function getPosition(current, increment) {
 
 // calc grid position
 function getGridPosition(x, y) {
-	let padding = 10;
+	let padding = 20;
 	let size = 40;
 	return {
 		x: (x * size) + (x * padding),
@@ -63,7 +63,8 @@ function buildNodes(apiCache) { // object construction
 				'grid': {
 					x: item.grid.x,
 					y: item.grid.y
-				}
+				},
+				'status': item.status
 			};
 			let nodeObj = two.makeRoundedRectangle(0, 0, node.width, node.height, node.radius);
 			nodeObj.linewidth = 4;
@@ -74,6 +75,11 @@ function buildNodes(apiCache) { // object construction
 			// register node to scene
 			pIndex[node.id] = node;
 			gNodes.add(nodeObj);
+		} else {
+			if(pIndex[item.id].status != item.status) {
+				console.log('Updated status [' + item.id + ']');
+				pIndex[item.id].status = item.status;
+			}
 		}
 	});
 }
@@ -122,8 +128,13 @@ function renderLoop(frameCount) {
 		node.translation.y = pos.y;
 
 		// update node style
-		//node.linewidth += 1;
-		//node = "#aaaaff";
+		if(item.status == 'selected') {
+			node.linewidth = 6;
+			node.stroke = "#ddffdd";
+		} else {
+			node.linewidth = 2;
+			node.stroke = "#ddddff";
+		}
 		//node.fill = "#" + item.id;
 
 		// update counters

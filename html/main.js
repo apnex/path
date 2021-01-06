@@ -9,15 +9,17 @@ two.appendTo(el);
 
 // global variables - fix somewhere else
 var pIndex = {};
+var nodeIndex = {};
+var pathIndex = {};
 
 // groups
 var gSystem = two.makeGroup();
 var gNodes = two.makeGroup();
-var gLinks = two.makeGroup();
+var gPaths = two.makeGroup();
 
 // Z-axis
 gSystem.add(gNodes);
-gSystem.add(gLinks);
+gSystem.add(gPaths);
 
 // calc raw position
 function getPosition(current, increment) {
@@ -44,17 +46,18 @@ function msleep(ms) {
 	});
 }
 
-// Get items from API server
-async function getNodes() {
-	return await ky.get('/nodes').json();
+// Get schema from API server
+async function getSchema() {
+	return await ky.get('/schema').json();
 }
 
-function buildNodes(apiCache) { // object construction
+// Node construction
+function buildNodes(apiCache) {
 	// iterate cache
 	Object.values(apiCache).forEach((item) => {
 		// check and construct construct node
 		if(pIndex[item.id] === undefined) {
-			console.log('Creating [' + item.id + ']');
+			console.log('Creating node[' + item.id + ']');
 			let node = {
 				'id': item.id,
 				'width': 40,
@@ -77,8 +80,49 @@ function buildNodes(apiCache) { // object construction
 			gNodes.add(nodeObj);
 		} else {
 			if(pIndex[item.id].status != item.status) {
-				console.log('Updated status [' + item.id + ']');
+				console.log('Updated status node[' + item.id + ']');
 				pIndex[item.id].status = item.status;
+			}
+		}
+	});
+}
+
+// Path construction
+function buildPaths(apiCache) {
+	// iterate cache
+	Object.values(apiCache).forEach((item) => {
+		// check and construct construct node
+		if(pathIndex[item.id] === undefined) {
+			// resolve endpoints
+			let srcObj = pIndex[item.route[0]];
+			let dstObj = pIndex[item.route[1]];
+
+			// check and create if valid
+			if(srcObj != undefined && dstObj != undefined) {
+				console.log('Creating path[' + item.id + ']');
+				let path = {
+					'id': item.id,
+					'route': item.route,
+					'status': item.status
+				};
+
+				let srcPos = getGridPosition(srcObj.grid.x, srcObj.grid.y);
+				let dstPos = getGridPosition(dstObj.grid.x, dstObj.grid.y);
+
+				// build path
+				let pathObj = two.makeLine(srcPos.x, srcPos.y, dstPos.x, dstPos.y);
+				pathObj.linewidth = 6;
+				pathObj.stroke = "#ddffdd";
+				path['object'] = pathObj;
+
+				// register node to scene
+				pathIndex[path.id] = path;
+				gPaths.add(pathObj);
+			}
+		} else {
+			if(pathIndex[item.id].status != item.status) {
+				console.log('Updated status path[' + item.id + ']');
+				pathIndex[item.id].status = item.status;
 			}
 		}
 	});
@@ -95,24 +139,42 @@ function clearNodes(apiCache) {
 	});
 }
 
+function clearPaths(apiCache) {
+	// delete paths
+	Object.values(pathIndex).forEach((item) => {
+		if(apiCache[item.id] === undefined) {
+			console.log('Deleting path[' + item.id + ']');
+			delete pathIndex[item.id];
+			gPaths.remove(item.object);
+		}
+	});
+}
+
 async function apiLoop() { // main loop iteration - called from play()
 	console.log('Called apiLoop, getting nodes.. ');
 
 	// build ports
-	return getNodes().then((data) => {
-		let apiCache = {};
-		data.items.forEach((item) => {
-			apiCache[item.id] = item;
+	return getSchema().then((schema) => {
+		// resolve nodes
+		let apiNodeCache = {};
+		schema.nodes.forEach((item) => {
+			apiNodeCache[item.id] = item;
 		});
-		clearNodes(apiCache); // delete stale nodes
-		buildNodes(apiCache); // create missing nodes
+		clearNodes(apiNodeCache); // delete stale nodes
+		buildNodes(apiNodeCache); // create missing nodes
+
+		// resolve paths
+		let apiPathCache = {};
+		schema.paths.forEach((item) => {
+			apiPathCache[item.id] = item;
+		});
+		clearPaths(apiPathCache); // delete stale paths
+		buildPaths(apiPathCache); // create missing paths
 		return 'apiLoop complete';
 	});
 }
 
 function renderLoop(frameCount) {
-	console.log('Called renderLoop, drawing nodes.. ');
-
 	let gridSize = {
 		x: 0,
 		y: 0
@@ -142,26 +204,31 @@ function renderLoop(frameCount) {
 		}
 	});
 
-	// update group center translation
+	// update grid center translation
 	let gridPos = getGridPosition(gridSize.x, gridSize.y);
 	let shiftGroup = {
 		x: -(gridPos.x / 2),
 		y: -(gridPos.y / 2),
 	};
 	gNodes.translation.set(shiftGroup.x, shiftGroup.y);
+	gPaths.translation.set(shiftGroup.x, shiftGroup.y);
 }
 
 var apiCounter = 0
 var apiInterval = 1000
 var renderCounter = 0;
 var renderInterval = 1000
+var center = {
+	x: two.width / 2,
+	y: two.height / 2
+};
 two.bind("update", async(frameCount, timeDelta) => {
 
 	// apiInterval
 	if(typeof(timeDelta) != 'undefined') {
 		apiCounter += timeDelta;
 	}
-	if(apiCounter > apiInterval) { // called every 2 seconds
+	if(apiCounter > apiInterval) { // called every 1 second
 		apiCounter = 0
 		await apiLoop();
 	}
@@ -170,7 +237,7 @@ two.bind("update", async(frameCount, timeDelta) => {
 	if(typeof(timeDelta) != 'undefined') {
 		renderCounter += timeDelta;
 	}
-	if(renderCounter > renderInterval) { // called every 2 seconds
+	if(renderCounter > renderInterval) { // called every 1 second
 		renderCounter = 0
 		await renderLoop();
 	}
@@ -183,9 +250,5 @@ two.bind('resize', () => {
 })
 
 // center
-var center = {
-	x: two.width / 2,
-	y: two.height / 2
-};
 gSystem.translation.set(center.x, center.y);
 two.play();

@@ -10,12 +10,34 @@ const os = require("os");
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-var data = [];
 
 // implement an external grid module for placement?
 // integrate grid as first-class API objcet
+var schema = {
+	nodes: [],
+	paths: []
+};
 var grid = {};
 var selected = [];
+
+// Implement NODES and PATHS as discreet modules referenced here
+
+// retrieve all data
+app.get('/schema', (req, res) => {
+	console.log('[ GET ] /schema');
+
+	var hostname = os.hostname();
+	let items = {
+		server: {
+			name: hostname,
+			address: req.headers.host
+		},
+		nodes: schema.nodes,
+		paths: schema.paths
+	};
+
+	res.status(200).send(items);
+});
 
 // create a node
 app.post('/nodes', (req, res) => {
@@ -29,7 +51,7 @@ app.post('/nodes', (req, res) => {
 		status: "unknown"
 	};
 	console.log(JSON.stringify(node, null, "\t"));
-	data.push(node);
+	schema.nodes.push(node);
 	let gridKey = node.grid.x + ':' + node.grid.y;
 	if(grid[gridKey] === undefined) {
 		grid[gridKey] = [];
@@ -43,7 +65,7 @@ app.post('/nodes', (req, res) => {
 // clear nodes
 app.post('/nodes/clear', (req, res) => {
 	console.log('[ POST ] /nodes/clear');
-	data = [];
+	schema.nodes = [];
 	grid = [];
 	selected = [];
 
@@ -61,10 +83,56 @@ app.get('/nodes', (req, res) => {
 			name: hostname,
 			address: req.headers.host
 		},
-		items: data
+		items: schema.nodes
 	};
 
 	res.status(200).send(items);
+});
+
+// create a path
+app.post('/paths', (req, res) => {
+	console.log('[ POST ] /paths');
+	console.log(JSON.stringify(req.body, null, "\t"));
+
+	// generate new path
+	let path = {
+		id: Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'),
+		route: req.body.path,
+		status: "unknown"
+	};
+	console.log(JSON.stringify(path, null, "\t"));
+	schema.paths.push(path);
+	console.log('[ ' + path.id + ' ] created');
+
+	res.status(200).send(path);
+});
+
+app.get('/paths', (req, res) => {
+	console.log('[ GET ] /paths');
+
+	var hostname = os.hostname();
+	let items = {
+		server: {
+			name: hostname,
+			address: req.headers.host
+		},
+		items: schema.paths
+	};
+
+	res.status(200).send(items);
+});
+
+app.delete('/paths/:pathId', (req, res) => {
+	let pathId = req.params.pathId;
+	console.log('[ DELETE ] /paths/' + pathId);
+
+	schema.paths = schema.paths.filter((item) => {
+		return (item.id != pathId);
+	}); // remove
+
+	res.status(200).send({
+		message: "port [ " + pathId + " ] deleted"
+	});
 });
 
 app.get('/grids/default/cells/:cellId', (req, res) => {
@@ -82,7 +150,7 @@ app.get('/nodes/:nodeId', (req, res) => {
 	let nodeId = req.params.nodeId;
 	console.log('[ GET ] /nodes/' + nodeId);
 
-	let node = data.filter((item) => {
+	let node = schema.nodes.filter((item) => {
 		return (item.id == nodeId);
 	})[0];
 
@@ -94,11 +162,11 @@ app.post('/nodes/:nodeId/select', (req, res) => {
 	console.log('[ POST ] /nodes/' + nodeId + '/select');
 
 	//console.log(JSON.stringify(req.body, null, "\t"));
-	data.forEach((node) => {
+	schema.nodes.forEach((node) => {
 		if(node.id == nodeId) {
 			if(selected.length > 1) {
 				let oldNodeId = selected.shift();
-				data.filter((item) => {
+				schema.nodes.filter((item) => {
 					return (item.id == oldNodeId);
 				})[0].status = 'unknown';
 			}
@@ -117,12 +185,11 @@ app.delete('/nodes/:nodeId', (req, res) => {
 	let nodeId = req.params.nodeId;
 	console.log('[ DELETE ] /nodes/' + nodeId);
 
-	data = data.filter((item) => {
+	schema.nodes = schema.nodes.filter((item) => {
 		let gridKey = item.grid.x + ':' + item.grid.y;
 		delete grid[gridKey];
 		return (item.id != nodeId);
 	}); // remove
-	console.log(JSON.stringify(data, null, "\t"));
 
 	res.status(200).send({
 		message: "port [ " + nodeId + " ] deleted"

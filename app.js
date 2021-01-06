@@ -48,6 +48,7 @@ app.post('/nodes', (req, res) => {
 	let node = {
 		id: Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'),
 		grid: req.body.grid,
+		tags: req.body.tags,
 		status: "unknown"
 	};
 	console.log(JSON.stringify(node, null, "\t"));

@@ -15,8 +15,9 @@ INPUTS=()
 
 # makeBody - validate input
 makeBody() {
-	local INPUT="${1}"
-	if [[ ${INPUT} =~ ^([0-9]+)[:]([0-9]+)$ ]]; then
+	local CELL="${1}"
+	local TAGS="${2}"
+	if [[ ${CELL} =~ ^([0-9]+)[:]([0-9]+)$ ]]; then
 		local GRIDX="${BASH_REMATCH[1]}"
 		local GRIDY="${BASH_REMATCH[2]}"
 		read -r -d "" BODY <<-EOF
@@ -24,7 +25,10 @@ makeBody() {
 			"grid": {
 				"x": "${GRIDX}",
 				"y": "${GRIDY}"
-			}
+			},
+			"tags": [
+				"${TAGS}"
+			]
 		}
 		EOF
 		printf "${BODY}"

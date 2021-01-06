@@ -11,6 +11,7 @@ two.appendTo(el);
 var pIndex = {};
 var nodeIndex = {};
 var pathIndex = {};
+var tagIndex = {};
 
 // groups
 var gSystem = two.makeGroup();
@@ -67,6 +68,7 @@ function buildNodes(apiCache) {
 					x: item.grid.x,
 					y: item.grid.y
 				},
+				'tags': item.tags,
 				'status': item.status
 			};
 			let nodeObj = two.makeRoundedRectangle(0, 0, node.width, node.height, node.radius);
@@ -75,7 +77,7 @@ function buildNodes(apiCache) {
 			nodeObj.fill = "#" + item.id;
 			node['object'] = nodeObj;
 
-			// register node to scene
+			// update indices and register node to scene
 			pIndex[node.id] = node;
 			gNodes.add(nodeObj);
 		} else {
@@ -84,6 +86,12 @@ function buildNodes(apiCache) {
 				pIndex[item.id].status = item.status;
 			}
 		}
+	});
+
+	// Update tag index - temp - work out incremental add/delete
+	tagIndex = {};
+	Object.values(pIndex).forEach((item) => {
+		tagIndex[item.tags[0]] = item;
 	});
 }
 
@@ -94,8 +102,18 @@ function buildPaths(apiCache) {
 		// check and construct construct node
 		if(pathIndex[item.id] === undefined) {
 			// resolve endpoints
-			let srcObj = pIndex[item.route[0]];
-			let dstObj = pIndex[item.route[1]];
+			let srcObj;
+			let dstObj;
+			if(item.route[0].length == 1) { // if tag
+				srcObj = tagIndex[item.route[0]];
+			} else {
+				srcObj = pIndex[item.route[0]];
+			}
+			if(item.route[0].length == 1) { // if tag
+				dstObj = tagIndex[item.route[1]];
+			} else {
+				dstObj = pIndex[item.route[1]];
+			}
 
 			// check and create if valid
 			if(srcObj != undefined && dstObj != undefined) {

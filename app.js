@@ -123,6 +123,16 @@ app.get('/paths', (req, res) => {
 	res.status(200).send(items);
 });
 
+// clear paths
+app.post('/paths/clear', (req, res) => {
+	console.log('[ POST ] /paths/clear');
+	schema.paths = [];
+
+	res.status(200).send({
+		message: "All paths cleared"
+	});
+});
+
 app.delete('/paths/:pathId', (req, res) => {
 	let pathId = req.params.pathId;
 	console.log('[ DELETE ] /paths/' + pathId);
@@ -203,4 +213,7 @@ app.get('/favicon.ico', (req, res) => {
 
 // Serve static html files
 app.use('/', express.static(path.join(__dirname, 'html')))
-module.exports = app;
+module.exports = {
+	api: app,
+	state: schema
+};

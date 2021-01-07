@@ -8,19 +8,39 @@ var two = new Two({
 two.appendTo(el);
 
 // global variables - fix somewhere else
-var pIndex = {};
 var nodeIndex = {};
 var pathIndex = {};
 var tagIndex = {};
 
 // groups
 var gSystem = two.makeGroup();
-var gNodes = two.makeGroup();
 var gPaths = two.makeGroup();
+var gNodes = two.makeGroup();
+var gText = two.makeGroup();
+
+// default css style - convert to managed entity
+var css = {
+	'text': {
+		'fill': '#ffffff',
+		'family': 'monospace',
+		'weight': 500,
+		'size': 12
+	}
+};
+var nodeStyle = {
+	'width': 20,
+	'height': 20,
+	'radius': 4
+};
+var gridStyle = {
+	'padding': 10,
+	'size': 20
+};
 
 // Z-axis
-gSystem.add(gNodes);
 gSystem.add(gPaths);
+gSystem.add(gNodes);
+gSystem.add(gText);
 
 // calc raw position
 function getPosition(current, increment) {
@@ -32,11 +52,9 @@ function getPosition(current, increment) {
 
 // calc grid position
 function getGridPosition(x, y) {
-	let padding = 20;
-	let size = 40;
 	return {
-		x: (x * size) + (x * padding),
-		y: (y * size) + (y * padding)
+		x: (x * gridStyle.size) + (x * gridStyle.padding),
+		y: (y * gridStyle.size) + (y * gridStyle.padding)
 	};
 }
 
@@ -57,13 +75,13 @@ function buildNodes(apiCache) {
 	// iterate cache
 	Object.values(apiCache).forEach((item) => {
 		// check and construct construct node
-		if(pIndex[item.id] === undefined) {
+		if(nodeIndex[item.id] === undefined) {
 			console.log('Creating node[' + item.id + ']');
 			let node = {
 				'id': item.id,
-				'width': 40,
-				'height': 40,
-				'radius': 5,
+				'width': nodeStyle.width,
+				'height': nodeStyle.height,
+				'radius': nodeStyle.radius,
 				'grid': {
 					x: item.grid.x,
 					y: item.grid.y
@@ -72,25 +90,32 @@ function buildNodes(apiCache) {
 				'status': item.status
 			};
 			let nodeObj = two.makeRoundedRectangle(0, 0, node.width, node.height, node.radius);
-			nodeObj.linewidth = 4;
-			nodeObj.stroke = "#aaaaff";
+			nodeObj.linewidth = 2;
+			nodeObj.stroke = "#eeeeff";
 			nodeObj.fill = "#" + item.id;
 			node['object'] = nodeObj;
 
+			// create text
+			var nodeText = two.makeText(node.tags[0], 0, 0, {
+				alignment: 'middle'
+			});
+			node['text'] = nodeText;
+
 			// update indices and register node to scene
-			pIndex[node.id] = node;
+			nodeIndex[node.id] = node;
 			gNodes.add(nodeObj);
+			gText.add(nodeText);
 		} else {
-			if(pIndex[item.id].status != item.status) {
+			if(nodeIndex[item.id].status != item.status) {
 				console.log('Updated status node[' + item.id + ']');
-				pIndex[item.id].status = item.status;
+				nodeIndex[item.id].status = item.status;
 			}
 		}
 	});
 
 	// Update tag index - temp - work out incremental add/delete
 	tagIndex = {};
-	Object.values(pIndex).forEach((item) => {
+	Object.values(nodeIndex).forEach((item) => {
 		tagIndex[item.tags[0]] = item;
 	});
 }
@@ -101,22 +126,22 @@ function buildPaths(apiCache) {
 	Object.values(apiCache).forEach((item) => {
 		// check and construct construct node
 		if(pathIndex[item.id] === undefined) {
-			// resolve endpoints
+			// resolve endpoints << move server side resolution
 			let srcObj;
 			let dstObj;
 			if(item.route[0].length == 1) { // if tag
 				srcObj = tagIndex[item.route[0]];
 			} else {
-				srcObj = pIndex[item.route[0]];
+				srcObj = nodeIndex[item.route[0]];
 			}
 			if(item.route[0].length == 1) { // if tag
 				dstObj = tagIndex[item.route[1]];
 			} else {
-				dstObj = pIndex[item.route[1]];
+				dstObj = nodeIndex[item.route[1]];
 			}
 
-			// check and create if valid
-			if(srcObj != undefined && dstObj != undefined) {
+			// check and create if valid - check status 'valid' instead
+			if(srcObj != undefined && dstObj != undefined && item.status == 'valid') {
 				console.log('Creating path[' + item.id + ']');
 				let path = {
 					'id': item.id,
@@ -147,20 +172,19 @@ function buildPaths(apiCache) {
 }
 
 function clearNodes(apiCache) {
-	// delete ports
-	Object.values(pIndex).forEach((node) => {
+	Object.values(nodeIndex).forEach((node) => {
 		if(apiCache[node.id] === undefined) {
-			console.log('Deleting [' + node.id + ']');
-			delete pIndex[node.id];
+			console.log('Deleting node[' + node.id + ']');
+			delete nodeIndex[node.id];
 			gNodes.remove(node.object);
+			gText.remove(node.text);
 		}
 	});
 }
 
 function clearPaths(apiCache) {
-	// delete paths
 	Object.values(pathIndex).forEach((item) => {
-		if(apiCache[item.id] === undefined) {
+		if(apiCache[item.id] === undefined || item.status == 'invalid') {
 			console.log('Deleting path[' + item.id + ']');
 			delete pathIndex[item.id];
 			gPaths.remove(item.object);
@@ -168,28 +192,33 @@ function clearPaths(apiCache) {
 	});
 }
 
-async function apiLoop() { // main loop iteration - called from play()
-	console.log('Called apiLoop, getting nodes.. ');
+async function apiLoop() { // main loop iteration - called from two.update
+	console.log('Called apiLoop, resolving model.. ');
 
-	// build ports
+	// resolve model
 	return getSchema().then((schema) => {
-		// resolve nodes
-		let apiNodeCache = {};
-		schema.nodes.forEach((item) => {
-			apiNodeCache[item.id] = item;
-		});
-		clearNodes(apiNodeCache); // delete stale nodes
-		buildNodes(apiNodeCache); // create missing nodes
-
-		// resolve paths
-		let apiPathCache = {};
-		schema.paths.forEach((item) => {
-			apiPathCache[item.id] = item;
-		});
-		clearPaths(apiPathCache); // delete stale paths
-		buildPaths(apiPathCache); // create missing paths
+		checkNodes(schema.nodes);
+		checkPaths(schema.paths);
 		return 'apiLoop complete';
 	});
+}
+
+function checkNodes(nodes) {
+	let apiCache = {};
+	nodes.forEach((item) => {
+		apiCache[item.id] = item;
+	});
+	clearNodes(apiCache); // delete stale nodes
+	buildNodes(apiCache); // create missing nodes
+}
+
+function checkPaths(paths) {
+	let apiCache = {};
+	paths.forEach((item) => {
+		apiCache[item.id] = item;
+	});
+	clearPaths(apiCache); // delete stale paths
+	buildPaths(apiCache); // create missing paths
 }
 
 function renderLoop(frameCount) {
@@ -197,38 +226,53 @@ function renderLoop(frameCount) {
 		x: 0,
 		y: 0
 	};
-	Object.values(pIndex).forEach((item) => {
+	Object.values(nodeIndex).forEach((item) => {
 		// update node position
 		let pos = getGridPosition(item.grid.x, item.grid.y);
 		let node = item.object;
 		node.translation.x = pos.x;
 		node.translation.y = pos.y;
 
+		// update text position -- change to be part of node group
+		let text = item.text;
+		text.translation.x = pos.x;
+		text.translation.y = pos.y;
+
 		// update node style
 		if(item.status == 'selected') {
 			node.linewidth = 6;
-			node.stroke = "#ddffdd";
+			node.stroke = "#eeffee";
 		} else {
 			node.linewidth = 2;
-			node.stroke = "#ddddff";
+			node.stroke = "#eeeeff";
 		}
 
+		// update text style
+		// convert logic to refer to css managed entity instead of static
+		text.fill = '#ffffff';
+		text.family = 'monospace';
+		text.weight = 600;
+		text.size = 14;
+
 		// update counters
-		if(gridSize.x < item.grid.x) {
+		if(gridSize.x < Number(item.grid.x)) {
 			gridSize.x = item.grid.x;
 		}
-		if(gridSize.y < item.grid.y) {
+		if(gridSize.y < Number(item.grid.y)) {
 			gridSize.y = item.grid.y;
 		}
 	});
 
 	// update grid center translation
+	console.log('gridsize');
+	console.log(gridSize);
 	let gridPos = getGridPosition(gridSize.x, gridSize.y);
 	let shiftGroup = {
 		x: -(gridPos.x / 2),
 		y: -(gridPos.y / 2),
 	};
 	gNodes.translation.set(shiftGroup.x, shiftGroup.y);
+	gText.translation.set(shiftGroup.x, shiftGroup.y);
 	gPaths.translation.set(shiftGroup.x, shiftGroup.y);
 }
 

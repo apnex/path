@@ -76,7 +76,8 @@ function compileGrid(grid) {
 
 	return {
 		nodes: result,
-		paths: compilePath(routes)
+		paths: routes
+		//paths: compilePath(routes)
 	};
 };
 

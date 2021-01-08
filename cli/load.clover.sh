@@ -17,10 +17,9 @@ function loadNodes() {
 function loadPaths() {
 	IFS=$'\n'
 	COUNT=0
-	for LINK in ${PATHS}; do
-		local LINKSRC=$(printf ${LINK} | jq -r '.[0]')
-		local LINKDST=$(printf ${LINK} | jq -r '.[1]')
-		./cmd.paths.create.sh "${LINKSRC}" "${LINKDST}"
+	for ROUTE in ${PATHS}; do
+		local HOPS=($(printf ${ROUTE} | jq -r '.[]'))
+		./cmd.paths.create.sh "${HOPS[@]}"
 		COUNT=$((COUNT+1))
 	done
 }

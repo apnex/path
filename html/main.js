@@ -78,35 +78,37 @@ function buildNodes(apiCache) {
 	Object.values(apiCache).forEach((item) => {
 		// check and construct construct node
 		if(nodeIndex[item.id] === undefined) {
-			console.log('Creating node[' + item.id + ']');
-			let node = {
-				'id': item.id,
-				'width': nodeStyle.width,
-				'height': nodeStyle.height,
-				'radius': nodeStyle.radius,
-				'grid': {
-					x: item.grid.x,
-					y: item.grid.y
-				},
-				'tags': item.tags,
-				'status': item.status
-			};
-			let nodeObj = two.makeRoundedRectangle(0, 0, node.width, node.height, node.radius);
-			nodeObj.linewidth = 2;
-			nodeObj.stroke = "#eeeeff";
-			nodeObj.fill = "#" + item.id;
-			node['object'] = nodeObj;
+			//if(item.status == 'unknown') {
+				console.log('Creating node[' + item.id + ']');
+				let node = {
+					'id': item.id,
+					'width': nodeStyle.width,
+					'height': nodeStyle.height,
+					'radius': nodeStyle.radius,
+					'grid': {
+						x: item.grid.x,
+						y: item.grid.y
+					},
+					'tags': item.tags,
+					'status': item.status
+				};
+				let nodeObj = two.makeRoundedRectangle(0, 0, node.width, node.height, node.radius);
+				nodeObj.linewidth = 2;
+				nodeObj.stroke = "#eeeeff";
+				nodeObj.fill = "#" + item.id;
+				node['object'] = nodeObj;
 
-			// create text
-			var nodeText = two.makeText(node.tags[0], 0, 0, {
-				alignment: 'middle'
-			});
-			node['text'] = nodeText;
+				// create text
+				var nodeText = two.makeText(node.tags[0], 0, 0, {
+					alignment: 'middle'
+				});
+				node['text'] = nodeText;
 
-			// update indices and register node to scene
-			nodeIndex[node.id] = node;
-			gNodes.add(nodeObj);
-			gText.add(nodeText);
+				// update indices and register node to scene
+				nodeIndex[node.id] = node;
+				gNodes.add(nodeObj);
+				gText.add(nodeText);
+			//}
 		} else {
 			if(nodeIndex[item.id].status != item.status) {
 				console.log('Updated status node[' + item.id + ']');
@@ -128,17 +130,10 @@ function buildPaths(apiCache) {
 	Object.values(apiCache).forEach((item) => {
 		// check and construct construct node
 		if(pathIndex[item.id] === undefined) {
-			// resolve endpoints << move server side resolution
-			// change to retrieve endpoint IDs only.
-			let srcObj = nodeIndex[item.hops[0]];
-			let dstObj = nodeIndex[item.hops[1]];
-
-			// loop over hops
-			// build two.points
-			// make path
-			let points = [];
+			// validate and make path from hop ids
 			if(item.status == 'valid') {
 				console.log('Creating path[' + item.id + ']');
+				let points = [];
 				item.hops.forEach((hop) => {
 					let hopObj = nodeIndex[hop];
 					let hopPos = getGridPosition(hopObj.grid.x, hopObj.grid.y);
@@ -151,7 +146,7 @@ function buildPaths(apiCache) {
 				};
 
 				// build path
-				let newPoints = a.roundCorners(points, 4, 0);
+				let newPoints = a.roundCorners(points, 10, 0);
 				let pathObj = new Two.Path(a.toAnchors(newPoints, 1), false, false, true);
 				pathObj.linewidth = 6;
 				pathObj.stroke = "#ddffdd";
@@ -244,8 +239,10 @@ function renderLoop(frameCount) {
 
 		// update node style
 		if(item.status == 'selected') {
-			node.linewidth = 6;
-			node.stroke = "#eeffee";
+			//node.linewidth = 6;
+			//node.stroke = "#eeffee";
+			node.opacity = 0.2;
+			node.noStroke();
 		} else {
 			node.linewidth = 2;
 			node.stroke = "#eeeeff";

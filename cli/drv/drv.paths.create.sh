@@ -15,19 +15,13 @@ INPUTS=()
 
 # makeBody - validate input
 makeBody() {
-	local PATHSRC="${1}"
-	local PATHDST="${2}"
-	if [[ -n "${PATHSRC}" && -n "${PATHDST}" ]]; then
-		read -r -d "" BODY <<-EOF
-		{
-			"path": [
-				"${PATHSRC}",
-				"${PATHDST}"
-			]
-		}
-		EOF
-		printf "${BODY}"
-	fi
+	local LIST=$(makeJoin "${@}")
+	read -r -d "" BODY <<-EOF
+	{
+		"route": [ ${LIST} ]
+	}
+	EOF
+	printf "${BODY}"
 }
 
 # apiPost

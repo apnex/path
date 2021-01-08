@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NODES=$(cat clover.json | jq -c '.nodes[]')
-#PATHS=$(cat model.json | jq -c '.paths[]')
+PATHS=$(cat clover.json | jq -c '.paths[]')
 
 function loadNodes() {
 	IFS=$'\n'
@@ -25,5 +25,8 @@ function loadPaths() {
 	done
 }
 
+## clear and load
+./cmd.nodes.clear.sh
+./cmd.paths.clear.sh
 loadNodes
-#loadPaths
+loadPaths

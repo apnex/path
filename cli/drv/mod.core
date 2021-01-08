@@ -52,6 +52,18 @@ function ccyan {
 	printf "${CYAN}${STRING}${NC}"
 }
 
+function makeJoin {
+	local INPUT=("${@}")
+	for X in ${INPUT[@]}; do
+		if [[ F -eq 1 ]]; then
+			echo -n ","
+		else
+			F=1
+		fi
+		echo -n '"'"${X}"'"'
+	done
+}
+
 function isSuccess {
 	local STRING=${1}
 	local SESSION=${2}

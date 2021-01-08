@@ -45,23 +45,46 @@ function checkPaths(state) {
 
 	// check if paths valid
 	//console.log('[ SERVER ] this is a paths status check');
-	state.paths.forEach((item) => {
+	/*state.paths.forEach((item) => {
 		let srcObj;
 		let dstObj;
-		if(item.route[0].length == 1) { // if tag
+		if(item.route[0].length < 6) { // if tag
 			srcObj = tagIndex[item.route[0]];
 		} else {
 			srcObj = nodeIndex[item.route[0]];
 		}
-		if(item.route[0].length == 1) { // if tag
+		if(item.route[1].length < 6) { // if tag
 			dstObj = tagIndex[item.route[1]];
 		} else {
 			dstObj = nodeIndex[item.route[1]];
 		}
 		if(srcObj != undefined && dstObj != undefined) {
 			item.status = 'valid';
+			item.hops = [
+				srcObj.id,
+				dstObj.id
+			];
 		} else {
 			item.status = 'invalid';
 		}
+	});*/
+
+	state.paths.forEach((path) => {
+		path.hops = [];
+		let hopId;
+		let health = 'valid';
+		path.route.forEach((hop) => {
+			if(hop.length < 6) { // if tag
+				node = tagIndex[hop];
+			} else {
+				node = nodeIndex[hop];
+			}
+			if(node != undefined) {
+				path.hops.push(node.id);
+			} else {
+				health = 'invalid';
+			}
+		});
+		path.status = health;
 	})
 }

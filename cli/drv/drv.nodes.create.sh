@@ -23,8 +23,8 @@ makeBody() {
 		read -r -d "" BODY <<-EOF
 		{
 			"grid": {
-				"x": "${GRIDX}",
-				"y": "${GRIDY}"
+				"x": ${GRIDX},
+				"y": ${GRIDY}
 			},
 			"tags": [
 				"${TAGS}"

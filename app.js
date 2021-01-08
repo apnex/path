@@ -42,7 +42,6 @@ app.get('/schema', (req, res) => {
 // create a node
 app.post('/nodes', (req, res) => {
 	console.log('[ POST ] /nodes');
-	console.log(JSON.stringify(req.body, null, "\t"));
 
 	// generate new node
 	let node = {
@@ -93,12 +92,11 @@ app.get('/nodes', (req, res) => {
 // create a path
 app.post('/paths', (req, res) => {
 	console.log('[ POST ] /paths');
-	console.log(JSON.stringify(req.body, null, "\t"));
 
 	// generate new path
 	let path = {
 		id: Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'),
-		route: req.body.path,
+		route: req.body.route,
 		status: "unknown"
 	};
 	console.log(JSON.stringify(path, null, "\t"));

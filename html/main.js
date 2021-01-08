@@ -8,6 +8,8 @@ var two = new Two({
 two.appendTo(el);
 
 // global variables - fix somewhere else
+// init anchor
+const a = new anchor;
 var nodeIndex = {};
 var pathIndex = {};
 var tagIndex = {};
@@ -23,18 +25,18 @@ var css = {
 	'text': {
 		'fill': '#ffffff',
 		'family': 'monospace',
-		'weight': 500,
+		'weight': 600,
 		'size': 12
 	}
 };
 var nodeStyle = {
-	'width': 20,
-	'height': 20,
+	'width': 25,
+	'height': 25,
 	'radius': 4
 };
 var gridStyle = {
 	'padding': 10,
-	'size': 20
+	'size': 25
 };
 
 // Z-axis
@@ -127,35 +129,33 @@ function buildPaths(apiCache) {
 		// check and construct construct node
 		if(pathIndex[item.id] === undefined) {
 			// resolve endpoints << move server side resolution
-			let srcObj;
-			let dstObj;
-			if(item.route[0].length == 1) { // if tag
-				srcObj = tagIndex[item.route[0]];
-			} else {
-				srcObj = nodeIndex[item.route[0]];
-			}
-			if(item.route[0].length == 1) { // if tag
-				dstObj = tagIndex[item.route[1]];
-			} else {
-				dstObj = nodeIndex[item.route[1]];
-			}
+			// change to retrieve endpoint IDs only.
+			let srcObj = nodeIndex[item.hops[0]];
+			let dstObj = nodeIndex[item.hops[1]];
 
-			// check and create if valid - check status 'valid' instead
-			if(srcObj != undefined && dstObj != undefined && item.status == 'valid') {
+			// loop over hops
+			// build two.points
+			// make path
+			let points = [];
+			if(item.status == 'valid') {
 				console.log('Creating path[' + item.id + ']');
+				item.hops.forEach((hop) => {
+					let hopObj = nodeIndex[hop];
+					let hopPos = getGridPosition(hopObj.grid.x, hopObj.grid.y);
+					points.push(hopPos);
+				});
 				let path = {
 					'id': item.id,
 					'route': item.route,
 					'status': item.status
 				};
 
-				let srcPos = getGridPosition(srcObj.grid.x, srcObj.grid.y);
-				let dstPos = getGridPosition(dstObj.grid.x, dstObj.grid.y);
-
 				// build path
-				let pathObj = two.makeLine(srcPos.x, srcPos.y, dstPos.x, dstPos.y);
+				let newPoints = a.roundCorners(points, 4, 0);
+				let pathObj = new Two.Path(a.toAnchors(newPoints, 1), false, false, true);
 				pathObj.linewidth = 6;
 				pathObj.stroke = "#ddffdd";
+				pathObj.fill = 'none';
 				path['object'] = pathObj;
 
 				// register node to scene
@@ -169,6 +169,10 @@ function buildPaths(apiCache) {
 			}
 		}
 	});
+}
+
+function makePath(points, o, s, scale) {
+	return path;
 }
 
 function clearNodes(apiCache) {
@@ -249,10 +253,10 @@ function renderLoop(frameCount) {
 
 		// update text style
 		// convert logic to refer to css managed entity instead of static
-		text.fill = '#ffffff';
-		text.family = 'monospace';
-		text.weight = 600;
-		text.size = 14;
+		text.fill = css.text.fill;
+		text.family = css.text.family;
+		text.weight = css.text.weight;
+		text.size = css.text.size;
 
 		// update counters
 		if(gridSize.x < Number(item.grid.x)) {
@@ -264,8 +268,6 @@ function renderLoop(frameCount) {
 	});
 
 	// update grid center translation
-	console.log('gridsize');
-	console.log(gridSize);
 	let gridPos = getGridPosition(gridSize.x, gridSize.y);
 	let shiftGroup = {
 		x: -(gridPos.x / 2),

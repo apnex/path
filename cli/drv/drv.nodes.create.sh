@@ -26,11 +26,12 @@ makeBody() {
 				"x": ${GRIDX},
 				"y": ${GRIDY}
 			},
-			"tags": [
-				"${TAGS}"
-			]
+			"tags": []
 		}
 		EOF
+		if [[ -n ${TAGS} ]]; then
+			BODY=$(echo "${BODY}" | jq -r ". | .tags += [\"${TAGS}\"]")
+		fi
 		printf "${BODY}"
 	fi
 }

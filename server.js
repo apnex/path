@@ -42,6 +42,7 @@ function checkPaths(state) {
 	Object.values(state.nodes).forEach((item) => {
 		tagIndex[item.tags[0]] = item;
 	});
+	//console.log(JSON.stringify(tagIndex, null, "\t"));
 
 	// check if paths valid
 	//console.log('[ SERVER ] this is a paths status check');
@@ -74,7 +75,7 @@ function checkPaths(state) {
 		let hopId;
 		let health = 'valid';
 		path.route.forEach((hop) => {
-			if(hop.length < 6) { // if tag
+			if(hop.toString().length < 6) { // if tag
 				node = tagIndex[hop];
 			} else {
 				node = nodeIndex[hop];

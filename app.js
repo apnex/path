@@ -43,11 +43,18 @@ app.get('/schema', (req, res) => {
 app.post('/nodes', (req, res) => {
 	console.log('[ POST ] /nodes');
 
+	// normalise tags
+	let tags = [];
+	if(Array.isArray(req.body.tags) && req.body.tags.length > 0) {
+		tags.unshift(...req.body.tags);
+	}
+	tags.unshift(schema.nodes.length);
+
 	// generate new node
 	let node = {
 		id: Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'),
 		grid: req.body.grid,
-		tags: req.body.tags,
+		tags: tags,
 		status: "unknown"
 	};
 	console.log(JSON.stringify(node, null, "\t"));

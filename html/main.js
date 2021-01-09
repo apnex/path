@@ -74,7 +74,6 @@ async function getSchema() {
 
 // Node construction
 function buildNodes(apiCache) {
-	// iterate cache
 	Object.values(apiCache).forEach((item) => {
 		// check and construct construct node
 		if(nodeIndex[item.id] === undefined) {
@@ -126,7 +125,6 @@ function buildNodes(apiCache) {
 
 // Path construction
 function buildPaths(apiCache) {
-	// iterate cache
 	Object.values(apiCache).forEach((item) => {
 		// check and construct construct node
 		if(pathIndex[item.id] === undefined) {
@@ -242,7 +240,7 @@ function renderLoop(frameCount) {
 			//node.linewidth = 6;
 			//node.stroke = "#eeffee";
 			node.opacity = 0.2;
-			node.noStroke();
+			//node.noStroke();
 		} else {
 			node.linewidth = 2;
 			node.stroke = "#eeeeff";

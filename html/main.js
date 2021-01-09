@@ -273,6 +273,7 @@ function renderLoop(frameCount) {
 	});
 	Object.values(pathIndex).forEach((item) => {
 		// update path style
+		/*
 		if(item.status == 'selected') {
 			//node.linewidth = 6;
 			//node.stroke = "#eeffee";
@@ -281,14 +282,18 @@ function renderLoop(frameCount) {
 			//node.linewidth = 2;
 			//node.stroke = "#eeeeff";
 		}
+		*/
+		let path = item.object;
 		path.opacity = 1;
 
 		// test check tags -- need to do better than this logic for multiple tags
+		/*
 		item.tags.forEach((tag) => {
 			if(tag == 'hidden') {
 				node.opacity = 0.2;
 			}
 		});
+		*/
 	});
 
 	// update grid center translation

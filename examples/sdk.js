@@ -32,7 +32,10 @@ module.exports = class sdk {
 	async pathsCreate(json) {
 		return this.client.post('paths', {json}).json();
 	}
-	async getDownload(json) {
-		return this.client.post('channel/api/v1.0/dlg/download', {json}).json();
+	async clearNodes(json) {
+		return this.client.post('nodes/clear', {json}).json();
+	}
+	async clearPaths(json) {
+		return this.client.post('paths/clear', {json}).json();
 	}
 }

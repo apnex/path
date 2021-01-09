@@ -13,7 +13,7 @@ async function main() {
 
 		// build nodes
 		schema.nodes.forEach((node) => {
-			console.log('Creating node at [' + node.grid.x + ' : ' + node.grid.y + ']');
+			console.log('Creating node at [ ' + node.grid.x + ':' + node.grid.y + ' ]');
 			fractal.nodesCreate(node);
 		});
 

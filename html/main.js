@@ -92,15 +92,17 @@ function buildNodes(apiCache) {
 					'status': item.status
 				};
 				let nodeObj = two.makeRoundedRectangle(0, 0, node.width, node.height, node.radius);
-				nodeObj.linewidth = 2;
-				nodeObj.stroke = "#eeeeff";
+				//nodeObj.linewidth = 2;
+				//nodeObj.stroke = "#eeeeff";
 				nodeObj.fill = "#" + item.id;
+				nodeObj.opacity = 0.0;
 				node['object'] = nodeObj;
 
 				// create text
 				var nodeText = two.makeText(node.tags[0], 0, 0, {
 					alignment: 'middle'
 				});
+				nodeText.opacity = 0.0;
 				node['text'] = nodeText;
 
 				// update indices and register node to scene
@@ -146,7 +148,7 @@ function buildPaths(apiCache) {
 				// build path
 				let newPoints = a.roundCorners(points, 10, 0);
 				let pathObj = new Two.Path(a.toAnchors(newPoints, 1), false, false, true);
-				pathObj.linewidth = 6;
+				pathObj.linewidth = 8;
 				pathObj.stroke = "#ddffdd";
 				pathObj.fill = 'none';
 				path['object'] = pathObj;
@@ -239,12 +241,19 @@ function renderLoop(frameCount) {
 		if(item.status == 'selected') {
 			//node.linewidth = 6;
 			//node.stroke = "#eeffee";
-			node.opacity = 0.2;
 			//node.noStroke();
 		} else {
 			node.linewidth = 2;
 			node.stroke = "#eeeeff";
 		}
+		node.opacity = 1;
+
+		// test check tags -- need to do better than this logic for multiple tags
+		item.tags.forEach((tag) => {
+			if(tag == 'hidden') {
+				node.opacity = 0.2;
+			}
+		});
 
 		// update text style
 		// convert logic to refer to css managed entity instead of static
@@ -252,6 +261,7 @@ function renderLoop(frameCount) {
 		text.family = css.text.family;
 		text.weight = css.text.weight;
 		text.size = css.text.size;
+		text.opacity = 1;
 
 		// update counters
 		if(gridSize.x < Number(item.grid.x)) {
@@ -260,6 +270,25 @@ function renderLoop(frameCount) {
 		if(gridSize.y < Number(item.grid.y)) {
 			gridSize.y = item.grid.y;
 		}
+	});
+	Object.values(pathIndex).forEach((item) => {
+		// update path style
+		if(item.status == 'selected') {
+			//node.linewidth = 6;
+			//node.stroke = "#eeffee";
+			//node.noStroke();
+		} else {
+			//node.linewidth = 2;
+			//node.stroke = "#eeeeff";
+		}
+		path.opacity = 1;
+
+		// test check tags -- need to do better than this logic for multiple tags
+		item.tags.forEach((tag) => {
+			if(tag == 'hidden') {
+				node.opacity = 0.2;
+			}
+		});
 	});
 
 	// update grid center translation

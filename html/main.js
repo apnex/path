@@ -248,13 +248,6 @@ function renderLoop(frameCount) {
 		}
 		node.opacity = 1;
 
-		// test check tags -- need to do better than this logic for multiple tags
-		item.tags.forEach((tag) => {
-			if(tag == 'hidden') {
-				node.opacity = 0.2;
-			}
-		});
-
 		// update text style
 		// convert logic to refer to css managed entity instead of static
 		text.fill = css.text.fill;
@@ -262,6 +255,14 @@ function renderLoop(frameCount) {
 		text.weight = css.text.weight;
 		text.size = css.text.size;
 		text.opacity = 1;
+
+		// test check tags -- need to do better than this logic for multiple tags
+		item.tags.forEach((tag) => {
+			if(tag == 'hidden') {
+				node.opacity = 0.0;
+				text.opacity = 0.0;
+			}
+		});
 
 		// update counters
 		if(gridSize.x < Number(item.grid.x)) {

@@ -104,6 +104,7 @@ app.post('/paths', (req, res) => {
 	let path = {
 		id: Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'),
 		route: req.body.route,
+		closed: req.body.closed,
 		status: "unknown"
 	};
 	console.log(JSON.stringify(path, null, "\t"));

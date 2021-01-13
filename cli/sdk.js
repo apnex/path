@@ -97,11 +97,13 @@ module.exports = class sdk {
 	}
 	buildNode(json) {
 		// validate node spec
-		// provide error message
 		return json;
 	}
 	buildPath(json) {
-		// valid path via a path class/module/entity
+		let lastHop = json.route[json.route.length - 1];
+		if(lastHop.toLowerCase() == "z") {
+			json.closed = 1;
+		}
 		return json;
 	}
 }

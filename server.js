@@ -55,16 +55,20 @@ function checkPaths(state) {
 		let hopId;
 		let health = 'valid';
 		path.route.forEach((hop) => {
-			if(hop.toString().length < 6) { // if tag
-				// grabbing first hop entry in array only, need to fix logic here
-				node = tagIndex[hop][0];
+			if(hop.toString().toLowerCase() != "z") { // check if closed
+				if(hop.toString().length < 6) { // if tag
+					// grabbing first hop entry in array only, need to fix logic here
+					node = tagIndex[hop][0];
+				} else {
+					node = nodeIndex[hop];
+				}
+				if(node != undefined) {
+					path.hops.push(node.id);
+				} else {
+					health = 'invalid';
+				}
 			} else {
-				node = nodeIndex[hop];
-			}
-			if(node != undefined) {
-				path.hops.push(node.id);
-			} else {
-				health = 'invalid';
+				path.closed = 1;
 			}
 		});
 		path.status = health;

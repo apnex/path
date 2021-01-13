@@ -94,7 +94,8 @@ function buildNodes(apiCache) {
 				let nodeObj = two.makeRoundedRectangle(0, 0, node.width, node.height, node.radius);
 				//nodeObj.linewidth = 2;
 				//nodeObj.stroke = "#eeeeff";
-				nodeObj.fill = "#" + item.id;
+				//nodeObj.fill = "#" + item.id;
+				nodeObj.fill = "#29b6f6";
 				nodeObj.opacity = 0.0;
 				node['object'] = nodeObj;
 
@@ -142,14 +143,15 @@ function buildPaths(apiCache) {
 				let path = {
 					'id': item.id,
 					'route': item.route,
+					'closed': item.closed,
 					'status': item.status
 				};
 
 				// build path
-				let newPoints = a.roundCorners(points, 10, 0);
+				let newPoints = a.roundCorners(points, 10, path.closed);
 				let pathObj = new Two.Path(a.toAnchors(newPoints, 1), false, false, true);
 				pathObj.linewidth = 8;
-				pathObj.stroke = "#ddffdd";
+				pathObj.stroke = "#9ccc65";
 				pathObj.fill = 'none';
 				path['object'] = pathObj;
 

@@ -1,0 +1,19 @@
+{
+	"kind": "class",
+	"spec": {
+		"name": "myclass",
+		"body": {
+			"opacity": 1,
+			"fill": "#29b6f6",
+			"linewidth": 2,
+			"stroke": "#eeeeff",
+		},
+		"tags": [
+			"mytag"
+		]
+	},
+	"data": {
+		"id": "12d2a8",
+		"tags": []
+	}
+}

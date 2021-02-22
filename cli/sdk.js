@@ -58,6 +58,36 @@ module.exports = class sdk {
 	async nodesList(json) {
 		return this.client.get('nodes').json();
 	}
+	async layoutsCreate(json) {
+		if(json != undefined) {
+			return this.client.post('layouts', {json}).json();
+		} else {
+			let body = {
+				code: 404,
+				level: 'ERROR',
+				message: 'layouts.create <grid.name> <grid.x> <grid.y>'
+			};
+			let error = new Error(body.message);
+			error.body = body;
+			throw error;
+		}
+	}
+	async layoutsDelete(id) {
+		if(id != undefined) {
+			return this.client.delete('layouts/' + id).json();
+		} else {
+			let error = new Error();
+			error.body = {
+				code: 404,
+				level: 'ERROR',
+				message: 'layouts.delete <layout.id>'
+			};
+			throw error;
+		}
+	}
+	async layoutsList(json) {
+		return this.client.get('layouts').json();
+	}
 	async pathsCreate(spec) {
 		let json = this.buildPath(spec);
 		if(json != undefined) {

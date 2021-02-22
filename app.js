@@ -12,6 +12,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 // implement an external grid module for placement?
+//const layout = require('./layout.js');
+
 // integrate grid as first-class API objcet
 var schema = {
 	nodes: [],
@@ -20,7 +22,9 @@ var schema = {
 var grid = {};
 var selected = [];
 
-// Implement NODES and PATHS as discreet modules referenced here
+// testing
+const layout = new (require('./entities/layout.js'))();
+layout.bind(app, '/layouts', schema);
 
 // retrieve all data
 app.get('/schema', (req, res) => {

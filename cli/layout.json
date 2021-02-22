@@ -1,0 +1,10 @@
+{
+	"kind": "layout",
+	"spec": {
+		"name": "grid1",
+		"body": {
+			x: 20,
+			y: 20
+		}
+	}
+}

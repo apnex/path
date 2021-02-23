@@ -4,13 +4,13 @@ const os = require("os");
 	Provides direct interface against fractal API
 */
 
-module.exports = class layout {
+module.exports = class path {
 	constructor(options = {}) {
 		this.options = options;
 	}
 	bind(app, entity, state = {}) {
 		console.log('entity [' + entity + '] registered');
-	 	if(!state[entity]) {
+		if(!state[entity]) {
 			state[entity] = [];
 		}
 		let route = '/' + entity;
@@ -21,7 +21,7 @@ module.exports = class layout {
 			let item = this.create(req.body);
 			console.log('[ ' + item.id + ' ] created');
 			state[entity].push(item);
-			res.status(200).send(item)
+			res.status(200).send(item);
 		});
 
 		// delete
@@ -66,10 +66,11 @@ module.exports = class layout {
 			tags.unshift(...body.tags);
 		}
 
-		// generate new layout
+		// generate new item
 		let item = {
 			id: Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'),
-			grid: body,
+			route: body.route,
+			closed: body.closed,
 			tags: tags,
 			status: "unknown"
 		};

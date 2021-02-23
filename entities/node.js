@@ -4,13 +4,13 @@ const os = require("os");
 	Provides direct interface against fractal API
 */
 
-module.exports = class layout {
+module.exports = class path {
 	constructor(options = {}) {
 		this.options = options;
 	}
 	bind(app, entity, state = {}) {
 		console.log('entity [' + entity + '] registered');
-	 	if(!state[entity]) {
+		if(!state[entity]) {
 			state[entity] = [];
 		}
 		let route = '/' + entity;
@@ -18,10 +18,10 @@ module.exports = class layout {
 		// create
 		app.post(route, (req, res) => {
 			console.log('[ POST ] ' + route);
-			let item = this.create(req.body);
+			let item = this.create(req.body, state);
 			console.log('[ ' + item.id + ' ] created');
 			state[entity].push(item);
-			res.status(200).send(item)
+			res.status(200).send(item);
 		});
 
 		// delete
@@ -34,6 +34,16 @@ module.exports = class layout {
 			res.status(200).send({
 				message: entity + " [ " + itemId + " ] deleted"
 			});
+		});
+
+		// get
+		app.get(route + '/:itemId', (req, res) => {
+			let itemId = req.params.itemId;
+			console.log('[ GET ] ' + route + '/' + itemId);
+			let item = state[entity].filter((item) => {
+				return (item.id == itemId);
+			})[0];
+			res.status(200).send(item);
 		});
 
 		// clear
@@ -59,17 +69,18 @@ module.exports = class layout {
 			res.status(200).send(items);
 		});
 	}
-	create(body) {
+	create(body, state) {
 		// normalise tags
 		let tags = [];
 		if(Array.isArray(body.tags) && body.tags.length > 0) {
 			tags.unshift(...body.tags);
 		}
+		tags.unshift(state['nodes'].length); // add node index tag
 
-		// generate new layout
+		// generate new node
 		let item = {
 			id: Math.floor(Math.random() * 16777215).toString(16).padEnd(6, '0'),
-			grid: body,
+			grid: body.grid,
 			tags: tags,
 			status: "unknown"
 		};
